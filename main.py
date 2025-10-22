@@ -1,4 +1,4 @@
-import telas
-telas.app
+import pythons.telas as pt
 
 
+pt.App
