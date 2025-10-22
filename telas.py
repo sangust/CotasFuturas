@@ -68,9 +68,6 @@ class cadastro_login():
 
 
 
-
-
-
     def logar(self, tela_login):    
 
         ctk.CTkLabel(tela_login, text="Fazer Login", font=('', 25)).pack(pady=20)
