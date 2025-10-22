@@ -1,10 +1,8 @@
 from brapi import Brapi
 import matplotlib.pyplot as plt
 import pandas as pd
-import main
 
-df = pd.read_sql("SELECT chaveApi FROM usuarios", main.banco_dados)
-print(df)
+
 
 class Usuario():
     def __init__(self, chave_api):
@@ -35,8 +33,7 @@ class Cotacao():
         plt.show()
         
 
-user0 = Usuario(df.iloc[0,0])
-
+user0 = Usuario('iZedUXQS99BeuxuSAL7rRi')
 
 
 cota1 = Cotacao(input(str("Digite a cota:\n")))
