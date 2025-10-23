@@ -1,5 +1,6 @@
 import customtkinter as ctk
 import pythons.dados_usuarios as du
+import pandas as pd
 
 
 
@@ -21,14 +22,18 @@ class TelaLogin(ctk.CTkFrame):
         super().__init__(master, **kwargs)
         ctk.CTkLabel(master, text="Bem vindo ao Profitly", font=('', 25)).place(relx=0.5, rely=0.1, anchor='center')
         ctk.CTkLabel(master, text="Cole a sua Chave API:").place(relx=0.5, rely=0.54, anchor="center")
-        ctk.CTkButton(master, text="Login", command=self.processar_cadastro).place(relx=0.5, rely=0.91, anchor="center")
+        ctk.CTkLabel(master, text="Digite a sigla da cota:").place(relx=0.5, rely=0.34, anchor="center")
+        ctk.CTkButton(master, text="Login", command=self.processar_cadastro).place(relx=0.5, rely=0.81, anchor="center")
 
-        self.chaveApi_cadastro_input = ctk.CTkEntry(master, placeholder_text="Chave Api")
+        self.cota_usuario_input = ctk.CTkEntry(master, placeholder_text="Cotação:")
+        self.cota_usuario_input.place(relx=0.5, rely=0.415, anchor="center")
+        self.chaveApi_cadastro_input = ctk.CTkEntry(master, placeholder_text="Chave Api:")
         self.chaveApi_cadastro_input.place(relx=0.5, rely=0.61, anchor="center")
 
     def processar_cadastro(self):
         chaveApi = self.chaveApi_cadastro_input.get()
-        du.coleta_dados(chaveApi)
+        cota = self.cota_usuario_input.get()
+        self.cota = du.coleta_dados(chaveApi, cota)
         
 
 
@@ -56,8 +61,7 @@ class TelaCotacao(ctk.CTkFrame):
                         f"Preço Atual Da {cotacao_atual.results[0].symbol}":"BRL:" + str(cotacao_atual.results[0].regular_market_price),
                         "Volatilidade_1ano":(cotacao_atual.results[0].fifty_two_week_range),
                         "min_1ano": cotacao_atual.results[0].fifty_two_week_low,
-                        "max_1ano": cotacao_atual.results[0].fifty_two_week_high
-                    }
+                        "max_1ano": cotacao_atual.results[0].fifty_two_week_high}
         print(cotacao_atual)
     
 
