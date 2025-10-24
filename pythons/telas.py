@@ -1,68 +1,123 @@
 import customtkinter as ctk
 import pythons.dados_usuarios as du
 import pandas as pd
-
-
+from brapi import Brapi
+import webbrowser
 
 class App(ctk.CTk):
-    def __init__(self, fg_color = None, **kwargs):
-        super().__init__(fg_color, **kwargs)
+    def __init__(self):
+        super().__init__()
         ctk.set_appearance_mode("system")
-        self.geometry("420x450")
+        self.geometry("500x450")
         self.title("Profitly")
 
-        self.tela_login = TelaLogin(self)
-        
-
+        #Criar o frame da tela atual.
+        self.tela_atual = None
+        self.trocar_tela(TelaLogin)
         self.mainloop()
+
+    #Função para trocar de telas.
+    def trocar_tela(self, classe_tela):
+        
+        nova_tela = classe_tela(self)
+        if self.tela_atual is not None:
+            self.tela_atual.destroy()
+        self.tela_atual = nova_tela
+        self.tela_atual.pack(fill='both', expand=True)
 
 
 class TelaLogin(ctk.CTkFrame):
+    #esse master é a tela na qual esse frame (tela de login) vai aparecer, no caso é self, pois ele é chamado dentro da classe app
+    #então ele é chamado pra dentro da tela app que ocorre o mainloop().
+    #Os self dentro das label e entry, é pq tem que aparecer dentro desse frame, não na tela "principal" que é o app.
+
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
-        ctk.CTkLabel(master, text="Bem vindo ao Profitly", font=('', 25)).place(relx=0.5, rely=0.1, anchor='center')
-        ctk.CTkLabel(master, text="Cole a sua Chave API:").place(relx=0.5, rely=0.54, anchor="center")
-        ctk.CTkLabel(master, text="Digite a sigla da cota:").place(relx=0.5, rely=0.34, anchor="center")
-        ctk.CTkButton(master, text="Login", command=self.processar_cadastro).place(relx=0.5, rely=0.81, anchor="center")
+        ctk.CTkLabel(self, text="Bem vindo ao Profitly", font=('', 33)).place(relx=0.5, rely=0.1, anchor='center')
 
-        self.cota_usuario_input = ctk.CTkEntry(master, placeholder_text="Cotação:")
-        self.cota_usuario_input.place(relx=0.5, rely=0.415, anchor="center")
-        self.chaveApi_cadastro_input = ctk.CTkEntry(master, placeholder_text="Chave Api:")
-        self.chaveApi_cadastro_input.place(relx=0.5, rely=0.61, anchor="center")
+        ctk.CTkLabel(self, text="Você irá digitar alguma ação da bolsa de valores\n e aqui mostrará as suas principais informações" \
+        "\n e probabilidade de valorização da ação em anos.", font=('', 15)).place(relx=0.5, rely= 0.25, anchor='center')
+
+        ctk.CTkLabel(self, text="Cole a sua Chave API:", font=('', 15)).place(relx=0.5, rely=0.42, anchor="center")
+
+        ctk.CTkButton(self, text="Entrar", command=self.processar_cadastro).place(relx=0.5, rely=0.63, anchor="center")
+
+        self.error = ctk.CTkLabel(self, text='', )
+        self.error.place(relx=0.5, rely=0.48,anchor="center")
+
+        self.url = 'https://brapi.dev/dashboard'
+        ctk.CTkLabel(self, text='Caso não tenha uma chave api, entre no link e crie uma.',).place(relx=0.5, rely=0.9 ,anchor="center")
+        link=ctk.CTkLabel(self, text='https://brapi.dev/dashboard', text_color="cyan")
+        link.place(relx=0.5, rely=0.95,anchor="center")
+
+
+        #Comandos para passar o mouse encima do link e ele funcionar
+        link.bind("<Button-1>", lambda event: self.abrir_link(self.url))
+        link.bind("<Enter>", lambda event: link.configure(cursor="hand2"))
+        link.bind("<Enter>", lambda event: link.configure(text_color="deep sky blue"))
+        link.bind("<Leave>", lambda event: link.configure(cursor=""))
+        link.bind("<Leave>", lambda event: link.configure(text_color="cyan"))
+
+        
+
+        self.chaveApi_cadastro_input = ctk.CTkEntry(self, placeholder_text="Token")
+        self.chaveApi_cadastro_input.place(relx=0.5, rely=0.55, anchor="center")
+
+
+    def abrir_link(self, url):
+        webbrowser.open_new(url)
+
 
     def processar_cadastro(self):
-        chaveApi = self.chaveApi_cadastro_input.get()
-        cota = self.cota_usuario_input.get()
-        self.cota = du.coleta_dados(chaveApi, cota)
+        token_chave_api = self.chaveApi_cadastro_input.get()
+        chaveApi = Brapi(api_key=token_chave_api)
+        try:
+            #vai validar a chave api, se tiver incorreta ele já vai para o erro
+            chaveApi.quote.retrieve(tickers="BBAS3")
+
+            #Vai armazenar a chave api dele no banco de dados
+            du.coleta_dados(token_chave_api)
+            self.master.trocar_tela(TelaCotacao)
+        except Exception as e:
+            self.error.configure(text=f"Erro, Chave api invalida, Tente novamente\n{e}", text_color="red")
+
+            
         
 
 
 
 class TelaCotacao(ctk.CTkFrame):
     def __init__(self, master, **kwargs):
-        super().__init__(master, **kwargs)
+        super().__init__(master, bg_color="transparent", **kwargs)
         
         
-        ctk.CTkLabel(master, text="Profitly", font=('', 22), text_color="#00ffff").place(relx=0.05, rely=0.05)
-        ctk.CTkLabel(master, text="Digite a sigla da cota:").place(relx=0.5, rely=0.3, anchor="center")
+        ctk.CTkLabel(master, text="Profitly", font=('', 35), text_color="#eeff00").place(relx=0.05, rely=0.05)
+        ctk.CTkLabel(master, text="Digite a sigla da ação:").place(relx=0.5, rely=0.3, anchor="center")
 
-        ctk.CTkButton(master, text="Login", command=self.pesquisar_cota).place(relx=0.5, rely=0.55, anchor="center")
+        ctk.CTkButton(master, text="Buscar", command=self.pesquisar_cota).place(relx=0.5, rely=0.55, anchor="center")
         
 
-        self.chaveApi_cadastro_input = ctk.CTkEntry(master, placeholder_text="cota")
-        self.chaveApi_cadastro_input.place(relx=0.5, rely=0.4, anchor="center")
+        self.pesquisar_acao_input = ctk.CTkEntry(master, placeholder_text="EX: PETR4, BBAS3")
+        self.pesquisar_acao_input.place(relx=0.5, rely=0.4, anchor="center")
+
 
     def pesquisar_cota(self):
-        cota = self.chaveApi_cadastro_input.get()
 
-        cotacao_atual = cota
-        cotacao_atual = {"Nome da Empresa:": cotacao_atual.results[0].long_name,
-                        "Logo da Empresa:": cotacao_atual.results[0].logourl,
-                        f"Preço Atual Da {cotacao_atual.results[0].symbol}":"BRL:" + str(cotacao_atual.results[0].regular_market_price),
-                        "Volatilidade_1ano":(cotacao_atual.results[0].fifty_two_week_range),
-                        "min_1ano": cotacao_atual.results[0].fifty_two_week_low,
-                        "max_1ano": cotacao_atual.results[0].fifty_two_week_high}
-        print(cotacao_atual)
+        acao = self.pesquisar_acao_input.get()
+        df = pd.read_sql("select * from dadosUsuarios", du.banco_dados)
+        chaveApi = df.iloc[0,0]
+        chaveApi = Brapi(api_key=chaveApi)
+
+        try:
+            dados_cota = chaveApi.quote.retrieve(tickers=acao)
+            dados_cota = {"Nome da Empresa:": dados_cota.results[0].long_name,
+                            "Logo da Empresa:": dados_cota.results[0].logourl,
+                            f"Preço Atual Da {dados_cota.results[0].symbol}":"BRL:" + str(dados_cota.results[0].regular_market_price),
+                            "Volatilidade_1ano":(dados_cota.results[0].fifty_two_week_range),
+                            "min_1ano": dados_cota.results[0].fifty_two_week_low,
+                            "max_1ano": dados_cota.results[0].fifty_two_week_high}
+        except Exception as e:
+            print(e)
     
 
 
