@@ -8,15 +8,11 @@ cursor.execute("CREATE TABLE IF NOT EXISTS dadosUsuarios (chaveApi text primary 
 cursor.execute("CREATE TABLE IF NOT EXISTS cotas (sigla text primary key, valorAtual integer, nomeEmpresarial text, valorMinimoAnual integer, valorMaximoAnual integer)")
 
 
-def coleta_dados(chaveApi):
+def coleta_dados_api(chaveApi):
     cursor.execute(f"Insert or ignore into dadosUsuarios values ('{chaveApi}')")
     banco_dados.commit()
     
-
-
-            
-
-            
+        
 
 #cursor.execute(f"Insert or ignore into cotas values('{cota}','{dados_cota[1]}', '{dados_cota[0]}', '{dados_cota[2]}', '{dados_cota[3]}')")
 

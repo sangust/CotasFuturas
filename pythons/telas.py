@@ -3,6 +3,9 @@ import pythons.dados_usuarios as du
 import pandas as pd
 from brapi import Brapi
 import webbrowser
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
 
 class App(ctk.CTk):
     def __init__(self):
@@ -45,27 +48,28 @@ class TelaLogin(ctk.CTkFrame):
         self.error = ctk.CTkLabel(self, text='', )
         self.error.place(relx=0.5, rely=0.48,anchor="center")
 
-        self.url = 'https://brapi.dev/dashboard'
+        self.url = 'https://brapi.dev/'
         ctk.CTkLabel(self, text='Caso não tenha uma chave api, entre no link e crie uma.',).place(relx=0.5, rely=0.9 ,anchor="center")
-        link=ctk.CTkLabel(self, text='https://brapi.dev/dashboard', text_color="cyan")
+        link=ctk.CTkLabel(self, text='https://brapi.dev/', text_color="cyan")
         link.place(relx=0.5, rely=0.95,anchor="center")
 
 
         #Comandos para passar o mouse encima do link e ele funcionar
-        link.bind("<Button-1>", lambda event: self.abrir_link(self.url))
-        link.bind("<Enter>", lambda event: link.configure(cursor="hand2"))
-        link.bind("<Enter>", lambda event: link.configure(text_color="deep sky blue"))
-        link.bind("<Leave>", lambda event: link.configure(cursor=""))
-        link.bind("<Leave>", lambda event: link.configure(text_color="cyan"))
+        link.bind("<Button-1>", lambda evento: self.abrir_link(self.url))
+        link.bind("<Enter>", lambda evento: link.configure(cursor="hand2"))
+        link.bind("<Enter>", lambda evento: link.configure(text_color="deep sky blue"))
+        link.bind("<Leave>", lambda evento: link.configure(cursor=""))
+        link.bind("<Leave>", lambda evento: link.configure(text_color="cyan"))
 
-        
 
         self.chaveApi_cadastro_input = ctk.CTkEntry(self, placeholder_text="Token")
         self.chaveApi_cadastro_input.place(relx=0.5, rely=0.55, anchor="center")
 
 
+
     def abrir_link(self, url):
         webbrowser.open_new(url)
+
 
 
     def processar_cadastro(self):
@@ -73,31 +77,28 @@ class TelaLogin(ctk.CTkFrame):
         chaveApi = Brapi(api_key=token_chave_api)
         try:
             #vai validar a chave api, se tiver incorreta ele já vai para o erro
-            chaveApi.quote.retrieve(tickers="BBAS3")
+            dados = chaveApi.quote.retrieve(tickers="EQTL3")
 
             #Vai armazenar a chave api dele no banco de dados
-            du.coleta_dados(token_chave_api)
+            du.coleta_dados_api(token_chave_api)
             self.master.trocar_tela(TelaCotacao)
         except Exception as e:
             self.error.configure(text=f"Erro, Chave api invalida, Tente novamente\n{e}", text_color="red")
 
-            
-        
-
-
+       
 
 class TelaCotacao(ctk.CTkFrame):
     def __init__(self, master, **kwargs):
         super().__init__(master, bg_color="transparent", **kwargs)
         
         
-        ctk.CTkLabel(master, text="Profitly", font=('', 35), text_color="#eeff00").place(relx=0.05, rely=0.05)
-        ctk.CTkLabel(master, text="Digite a sigla da ação:").place(relx=0.5, rely=0.3, anchor="center")
+        ctk.CTkLabel(self, text="Profitly", font=('', 35), text_color="#eeff00").place(relx=0.05, rely=0.05)
+        ctk.CTkLabel(self, text="Digite a sigla da ação:").place(relx=0.5, rely=0.3, anchor="center")
 
-        ctk.CTkButton(master, text="Buscar", command=self.pesquisar_cota).place(relx=0.5, rely=0.55, anchor="center")
+        ctk.CTkButton(self, text="Buscar", command=self.pesquisar_cota).place(relx=0.5, rely=0.5, anchor="center")
         
 
-        self.pesquisar_acao_input = ctk.CTkEntry(master, placeholder_text="EX: PETR4, BBAS3")
+        self.pesquisar_acao_input = ctk.CTkEntry(self, placeholder_text="EX: PETR4, BBAS3")
         self.pesquisar_acao_input.place(relx=0.5, rely=0.4, anchor="center")
 
 
@@ -110,17 +111,18 @@ class TelaCotacao(ctk.CTkFrame):
 
         try:
             dados_cota = chaveApi.quote.retrieve(tickers=acao)
-            dados_cota = {"Nome da Empresa:": dados_cota.results[0].long_name,
-                            "Logo da Empresa:": dados_cota.results[0].logourl,
-                            f"Preço Atual Da {dados_cota.results[0].symbol}":"BRL:" + str(dados_cota.results[0].regular_market_price),
-                            "Volatilidade_1ano":(dados_cota.results[0].fifty_two_week_range),
-                            "min_1ano": dados_cota.results[0].fifty_two_week_low,
-                            "max_1ano": dados_cota.results[0].fifty_two_week_high}
+            dados_cota = {"nomeEmpresario": dados_cota.results[0].long_name,
+                        "sigla": dados_cota.results[0].logourl,
+                        f"Preço Atual Da {dados_cota.results[0].symbol}":"BRL:" + str(dados_cota.results[0].regular_market_price),
+                        "Volatilidade_1ano":(dados_cota.results[0].fifty_two_week_range),
+                        "min_1ano": dados_cota.results[0].fifty_two_week_low,
+                        "max_1ano": dados_cota.results[0].fifty_two_week_high}
+            print(dados_cota)
+            
+            
         except Exception as e:
             print(e)
-    
 
-
-
+        
 
 app = App()
