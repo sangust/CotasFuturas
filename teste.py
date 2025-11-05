@@ -1,7 +1,7 @@
 import pandas as pd
 import sqlite3
 import requests
-
+import time
 
     
 conn = sqlite3.connect("models/BancoDadosAcionario.db")
@@ -11,16 +11,10 @@ cursor = conn.cursor()
 dados_anuais_acionarios = []
 df_ticker = pd.read_excel("cms_files_148780_1710532689Empresas_da_B3.xlsx")
 df_DRE = pd.read_csv("csvs/dfp_cia_aberta_2010/dfp_cia_aberta_DRE_con_2010.csv", encoding="latin1", sep=";")
-df_BPA = pd.read_csv("csvs/dfp_cia_aberta_2010/dfp_cia_aberta_BPA_con_2010.csv", encoding="latin1", sep=";")
-df_BPP = pd.read_csv("csvs/dfp_cia_aberta_2010/dfp_cia_aberta_BPP_con_2010.csv", encoding="latin1", sep=";")
-df_DFC = pd.read_csv("csvs/dfp_cia_aberta_2010/dfp_cia_aberta_DFC_MI_con_2010.csv", encoding="latin1", sep=";")
 
 
 dados_anuais_acionarios.append(df_ticker)
 dados_anuais_acionarios.append(df_DRE)
-dados_anuais_acionarios.append(df_DFC)
-dados_anuais_acionarios.append(df_BPA)
-dados_anuais_acionarios.append(df_BPP)
 
 lpa1 = "3.99.01.01"
 lpa2 = "3.99.01.02"
@@ -51,25 +45,48 @@ for item in dados_anuais_acionarios:
                             else:
                                 empresasIBOV[i].append(linha[-2])
 
-               
-        case 3:
-            pass
-        case 4:
-            pass
-        case 5:    
-            pass
 
     contador += 1
 
+# print(empresasIBOV)
+
+result = requests.get("https://ledev.com.br/api/cotacoes/")
+result = result.json()
+
+def funcc(resultado):
+    lista = []
+    for i in range(0, len(resultado)):
+        lista.append(resultado[i]['id'])
+    return lista
+hora = time.time()
+for i in range(0, len(empresasIBOV)):
+    if empresasIBOV[i][0] in funcc(result):
+        for item in range(0, len(result)):
+            if result[item]['id'] == empresasIBOV[i][0]:
+                new_lista = [result[item]['price'], hora]
+                empresasIBOV[i].append(new_lista[0])
+                empresasIBOV[i].append(new_lista[1])
+
+
 print(empresasIBOV)
-
-
-#https://ledev.com.br/api/cotacoes/
-  
         
-# for i in range(0, len(empresasIBOV)):
-#     try:
-#         cursor.execute(f"Update EmpresasIBOV SET nomeEmpresarial = '{empresasIBOV[i][2]}' where ticker = '{empresasIBOV[i][0]}'")
-#     except:
-#         continue
-# conn.commit()
+for i in range(0, len(empresasIBOV)):
+    try:
+        cursor.execute(f"Update EmpresasIBOV SET cnpj = '{empresasIBOV[i][1]}' where ticker = '{empresasIBOV[i][0]}'")
+    except:
+        pass
+
+    try:
+        cursor.execute(f"Update EmpresasIBOV SET nomeEmpresarial = '{empresasIBOV[i][2]}' where ticker = '{empresasIBOV[i][0]}'")
+    except:
+        pass
+    
+    try:
+        cursor.execute(f"Update EmpresasIBOV SET precoAtual = '{empresasIBOV[i][-2]}' where ticker = '{empresasIBOV[i][0]}'")
+    except:
+        pass
+    try:    
+        cursor.execute(f"Update EmpresasIBOV SET horarioAtualizacaoPreco = '{empresasIBOV[i][-1]}' where ticker = '{empresasIBOV[i][0]}'")
+    except:
+        pass
+conn.commit()
