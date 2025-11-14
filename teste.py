@@ -1,8 +1,7 @@
 import pandas as pd
 import sqlite3
 import requests
-import time
-
+from datetime import datetime
     
 
 
@@ -48,44 +47,56 @@ for item in dados_anuais_acionarios:
 
 
 ticker_api = requests.get("https://ledev.com.br/api/cotacoes/").json()
-hora = time.time()
-##ARRUMAR ESSA ITERAÇÂO ABAIXO
-for j in range(0, len(ticker_api[0])):
-    print(ticker_api[j])
-    for i in range(0, len(empresasIBOV)):
-            if ticker_api[j]["id"] == empresasIBOV[i]["Ticker"]:
-                empresasIBOV[i]['Preco'] = ticker_api[j]['price']
-                empresasIBOV[i]['HR_PrecoAtual'] = hora
+hora = datetime.now()
+hora = hora.strftime("%H:%M")
 
-
-
-print(empresasIBOV)
-
-
-# print(empresasIBOV)
+for itemBD in empresasIBOV:
+    itemBD["Hr_Atualizacao"] = hora
+    for itemAPI in range(0, len(ticker_api)):
+        if itemBD["Ticker"] == ticker_api[itemAPI]['id']:
+            itemBD["Pc_Atual"] = ticker_api[itemAPI]['price']
+            
 
 
 
 
-# conn = sqlite3.connect("models/BancoDadosAcionario.db")
-# cursor = conn.cursor()
-# for i in range(0, len(empresasIBOV)):
+
+
+
+
+
+
+conn = sqlite3.connect("models/BancoDadosAcionario.db")
+cursor = conn.cursor()
+sql_query = "UPDATE EmpresaIBov SET cnpj = ? WHERE ticker = ?"
+
+
+
+for item in empresasIBOV:
+    # try:
+    #     cursor.execute(f"insert into Acoes VALUES ('{item['Ticker']}', '{item['Cnpj']}', '{item['Nm_Empresarial']}', '{item['Pc_Atual']}', '{item['Hr_Atualizacao']}')")
+    # except Exception as e:
+    #     pass
+
+
 #     try:
-#         cursor.execute(f"Update EmpresasIBOV SET cnpj = '{empresasIBOV[i][1]}' where ticker = '{empresasIBOV[i][0]}'")
+#         cursor.execute(f"Update Acoes SET Cnpj = '{empresasIBOV[i]['Cnpj']}' where ticker = '{empresasIBOV[i]['Ticker']}'")
 #     except:
 #         pass
 
 #     try:
-#         cursor.execute(f"Update EmpresasIBOV SET nomeEmpresarial = '{empresasIBOV[i][2]}' where ticker = '{empresasIBOV[i][0]}'")
+#         cursor.execute(f"Update Acoes SET Nm_Empresarial = '{empresasIBOV[i]['Nm_Empresarial']}' where ticker = '{empresasIBOV[i]['Ticker']}'")
 #     except:
 #         pass
     
 #     try:
-#         cursor.execute(f"Update EmpresasIBOV SET precoAtual = '{empresasIBOV[i][-2]}' where ticker = '{empresasIBOV[i][0]}'")
+#         cursor.execute(f"Update Acoes SET Pc_Atual = '{empresasIBOV[i]['Pc_Atual']}' where ticker = '{empresasIBOV[i]['Ticker']}'")
 #     except:
 #         pass
-#     try:    
-#         cursor.execute(f"Update EmpresasIBOV SET horarioAtualizacaoPreco = '{empresasIBOV[i][-1]}' where ticker = '{empresasIBOV[i][0]}'")
-#     except:
-#         pass
-# conn.commit()
+    try:    
+        cursor.execute(f"Update Acoes SET Hr_Atual = '{item['Hr_Atualizacao']}' where ticker = '{item['Ticker']}'")
+    except:
+        pass
+
+
+conn.commit()
