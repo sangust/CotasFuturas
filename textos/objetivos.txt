@@ -1,0 +1,26 @@
+objetivo: 
+Criar uma interface, que aceita Login e senha como 
+primeira page, e uma page primaria para pesquisar cotas e 
+depois mostrar as informações.
+
+Criar um banco de dados que armazena o ID, Nome, Senha, e ChaveApi
+de cada usuario do software.
+
+Fazer uma interligação para a interface receber valores, e um 
+codigo em python receber essas variaveis para aplicar no banco de dados.
+
+Criar um software que consome uma api de cotações
+de ações da ibovespa, tratar esses dados e exibir um grafico
+baseado nesses dados, para fazer uma previsão de investimento
+sendo o retorno que ele vai dar em 1 ano, baseado em medias.
+
+
+deixar uma API valida para uso, caso não seja possivel, usuario colocar uma
+buscar ação, guardar valores no DB, gerar dashboard sobre isso.
+sempre que buscar ação, procurar valores no DB, caso não exista, utilize a API.
+
+
+
+verificar se existe o lpa
+se n existir, fazer uma comparação para pegar o lpa certo
+baseado no cnpj
